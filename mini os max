@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Super Web OS MAX</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #4aa3df;
+            height: 100vh;
+            overflow: hidden;
+            transition: .4s;
+        }
+
+        .dark {
+            background: #111;
+            color: white;
+        }
+
+        .topbar {
+            background: #111;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .desktop {
+            display: flex;
+            gap: 25px;
+            padding: 30px;
+            flex-wrap: wrap;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .icon {
+            font-size: 45px;
+            cursor: pointer;
+            text-align: center;
+            width: 100px;
+            user-select: none;
+        }
+
+        .icon p {
+            font-size: 16px;
+            margin: 5px 0 0 0;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .window {
+            display: none;
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: black;
+            width: 420px;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-height: 70vh;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .dark .window {
+            background: #333;
+            color: white;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            border: 0;
+            border-radius: 10px;
+            background: #2196f3;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        input, textarea {
+            padding: 10px;
+            width: 90%;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .dark input, .dark textarea {
+            background: #222;
+            color: white;
+            border: 1px solid #555;
+        }
+
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #222;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: #eee;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dark .card {
+            background: #444;
+            color: white;
+        }
+
+        #saveStatus {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .dark #saveStatus {
+            color: #aaa;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            padding: 8px 0;
+        }
+
+        .dark .list-item {
+            border-bottom: 1px solid #555;
+        }
+
+        #messages {
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .dark #messages {
+            background: #222;
+            border-color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <h2>Super Web OS MAX</h2>
+    <span id="clock">00:00:00 AM</span>
+</div>
+
+<div class="desktop">
+    <div class="icon" onclick="openApp('profile')">👤<p>Profile</p></div>
+    <div class="icon" onclick="openApp('calculator')">🧮<p>Calculator</p></div>
+    <div class="icon" onclick="openApp('notes')">📝<p>Notes</p></div>
+    <div class="icon" onclick="openApp('bank')">🏦<p>Bank</p></div>
+    <div class="icon" onclick="openApp('shop')">🛒<p>Shop</p></div>
+    <div class="icon" onclick="openApp('games')">🎮<p>Games</p></div>
+    <div class="icon" onclick="openApp('filemanager')">📂<p>File Manager</p></div>
+    <div class="icon" onclick="openApp('inventory')">🎒<p>Inventory</p></div>
+    <div class="icon" onclick="openApp('achievements')">🏆<p>Achievements</p></div>
+    <div class="icon" onclick="openApp('dailyreward')">🎁<p>Daily Reward</p></div>
+    <div class="icon" onclick="openApp('stats')">📊<p>Stats</p></div>
+    <div class="icon" onclick="openApp('chat')">💬<p>Chat</p></div>
+    <div class="icon" onclick="openApp('rankshop')">👑<p>Ranks</p></div>
+    <div class="icon" onclick="openApp('colorshop')">🎨<p>Colors</p></div>
+    <div class="icon" onclick="darkMode()">🌙<p>Theme</p></div>
+</div>
+
+<div id="window" class="window">
+    <h2 id="title"></h2>
+    <div id="content"></div>
+    <hr>
+    <button onclick="closeApp()" style="background:#f44336;">Close</button>
+</div>
+
+<div class="taskbar">
+    <button onclick="openApp('profile')">Start</button>
+</div>
+
+<script>
+// Data Initialization
+let username = localStorage.username || "Player";
+let rank = localStorage.rank || "Player";
+let nameColor = localStorage.nameColor || "black";
+
+let money = Number(localStorage.money) || 1000;
+let bank = Number(localStorage.bank) || 0;
+let xp = Number(localStorage.xp) || 0;
+let level = Number(localStorage.level) || 1;
+
+let ranks = {
+    "VIP": 500,
+    "OP": 1000,
+    "Diamond": 5000,
+    "Gold": 3000,
+    "Iron": 1500
+};
+
+let colors = {
+    "Red": 500,
+    "Blue": 300,
+    "Gold": 1000,
+    "Purple": 1500
+};
+
+let files = JSON.parse(localStorage.getItem('files')) || [];
+let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
+let lastRewardTime = Number(localStorage.getItem('lastRewardTime')) || 0;
+
+let stats = JSON.parse(localStorage.getItem('stats')) || {
+    gamesPlayed: 0,
+    gamesWon: 0,
+    totalDeposits: 0,
+    xpBought: 0
+};
+
+let achievements = JSON.parse(localStorage.getItem('achievements')) || [
+    { id: 'first_win', title: 'First Victory 🎲', desc: 'Win the Guess Number game once.', unlocked: false },
+    { id: 'rich_bank', title: 'Investor 🏦', desc: 'Have $500 or more in the bank.', unlocked: false },
+    { id: 'rich_xp', title: 'Scholar 🧠', desc: 'Reach Level 3 or higher.', unlocked: false }
+];
+
+let saveTimer;
+let currentApp = "";
+
+// Universal Real-time Clock
+function updateClock() {
+    let now = new Date();
+    document.getElementById("clock").innerText = now.toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Core Save Engine
+function save(){
+    localStorage.username = username;
+    localStorage.rank = rank;
+    localStorage.nameColor = nameColor;
+    localStorage.money = money;
+    localStorage.bank = bank;
+    localStorage.xp = xp;
+    localStorage.level = level;
+    localStorage.setItem('files', JSON.stringify(files));
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    localStorage.setItem('lastRewardTime', lastRewardTime);
+    localStorage.setItem('stats', JSON.stringify(stats));
+    localStorage.setItem('achievements', JSON.stringify(achievements));
+}
+
+// Welcome Event Handler
+function playerJoin(){
+    alert(
+        "Welcome Player! 🎉\n\n" +
+        "Super Web OS MAX is Ready! 🚀\n\n" +
+        "Thanks to the coders who helped create this project 💻🔥\n\n" +
+        "🤖 ChatGPT\n" +
+        "🤖 Gemini"
+    );
+}
+window.onload = playerJoin;
+
+// Global Level Progress Engine
+function gainXP(amount) {
+    xp += amount;
+    let xpNeeded = level * 100;
+    if(xp >= xpNeeded) {
+        xp -= xpNeeded;
+        level++;
+        alert(`🎉 Level Up! You are now Level ${level}!`);
+    }
+    save();
+    if(currentApp === 'profile' || currentApp === 'stats') openApp(currentApp);
+}
+
+// Background Rules Check
+function checkAchievements() {
+    if(stats.gamesWon >= 1 && !achievements[0].unlocked)
+    {
+        achievements[0].unlocked = true;
+    }
+
+    if(bank >= 500 && !achievements[1].unlocked)
+    {
+        achievements[1].unlocked = true;
+    }
+
+    if(level >= 3 && !achievements[2].unlocked)
+    {
+        achievements[2].unlocked = true;
+    }
+
+    save();
+}
+
+// App Routing Controller
+function openApp(app){
+    currentApp = app;
+    let win = document.getElementById("window");
+    let title = document.getElementById("title");
+    let content = document.getElementById("content");
+
+    win.style.display = "block";
+    checkAchievements();
+
+    if(app == "profile"){
+        title.innerHTML = "User Profile";
+        content.innerHTML = `
+            <div class="card">
+                <p>Edit Username:</p>
+                <input id="editUser" value="${username}" style="width:70%;">
+                <button onclick="updateUsername()">Set</button>
+            </div>
+            <h3 style="color:${nameColor}">User: ${username}</h3>
+            <h3>Rank: <span style="text-transform: capitalize;">${rank}</span></h3>
+            <h3>Money: $${money}</h3>
+            <h3>Bank: $${bank}</h3>
+            <h3>XP: ${xp} / ${level * 100}</h3>
+            <h3>Level: ${level}</h3>
+        `;
+    }
+
+    if(app == "calculator"){
+        title.innerHTML = "Calculator";
+        content.innerHTML = `
+            <input id="calc" placeholder="e.g., 2+2*5">
+            <button onclick="calculate()">=</button>
+            <h3 id="answer"></h3>
+        `;
+    }
+
+    if(app == "notes"){
+        title.innerHTML = "Notes";
+        let currentNote = localStorage.note || "";
+        content.innerHTML = `
+            <textarea id="note" rows="6" placeholder="Write your note here...">${currentNote}</textarea>
+            <p id="saveStatus">${currentNote ? "Auto Saved ✔" : "Not saved"}</p>
+            <button onclick="clearNote()" style="background: #f44336;">Delete</button>
+        `;
+        
+        let noteBox = document.getElementById("note");
